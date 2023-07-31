@@ -36,3 +36,14 @@ FOUNDATION_EXPORT const unsigned char ZFPlayerVersionString[];
 #import "UIScrollView+ZFPlayer.h"
 #import "ZFPlayerLogManager.h"
 #import "ZFPlayerConst.h"
+#ifndef SWIFT_PACKAGE
+#import "ZFLandscapeRotationManager.h"
+#import "ZFLandscapeRotationManager_iOS15.h"
+#import "ZFLandscapeRotationManager_iOS16.h"
+#import "ZFLandscapeViewController.h"
+#import "ZFLandscapeViewController_iOS15.h"
+#import "ZFLandscapeWindow.h"
+#import "ZFPersentInteractiveTransition.h"
+#import "ZFPortraitViewController.h"
+#import "ZFPresentTransition.h"
+#endif

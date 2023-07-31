@@ -55,7 +55,12 @@
     static NSBundle *bundle = nil;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        bundle = [NSBundle bundleWithPath:[[NSBundle bundleForClass:[self class]] pathForResource:@"ZFPlayer" ofType:@"bundle"]];
+#ifdef SWIFT_PACKAGE
+    NSBundle *containnerBundle = SWIFTPM_MODULE_BUNDLE;
+#else
+    NSBundle *containnerBundle = [NSBundle bundleForClass:[self class]];
+#endif
+        bundle = [NSBundle bundleWithPath:[containnerBundle pathForResource:@"ZFPlayer" ofType:@"bundle"]];
     });
     return bundle;
 }
