@@ -92,10 +92,16 @@
         self.horizontalPanShowControlView = YES;
         self.autoFadeTimeInterval = 0.25;
         self.autoHiddenTimeInterval = 2.5;
-        [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(volumeChanged:)
-                                                     name:@"AVSystemController_SystemVolumeDidChangeNotification"
-                                                   object:nil];
+        if (@available(iOS 15, *)) {
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(volumeChanged:)
+                                                         name:@"SystemVolumeDidChange"                                                               object:nil];
+        }else{
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(volumeChanged:)
+                                                         name:@"AVSystemController_SystemVolumeDidChangeNotification"
+                                                       object:nil];
+        }
     }
     return self;
 }
@@ -165,7 +171,11 @@
 }
 
 - (void)dealloc {
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+    if (@available(iOS 15, *)) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"SystemVolumeDidChange" object:nil];
+    }else{
+        [[NSNotificationCenter defaultCenter] removeObserver:self name:@"AVSystemController_SystemVolumeDidChangeNotification" object:nil];
+    }
     [self cancelAutoFadeOutControlView];
 }
 
@@ -243,17 +253,27 @@
 }
 
 /// 音量改变的通知
-- (void)volumeChanged:(NSNotification *)notification {    
-    NSDictionary *userInfo = notification.userInfo;
-    NSString *reasonstr = userInfo[@"AVSystemController_AudioVolumeChangeReasonNotificationParameter"];
-    if ([reasonstr isEqualToString:@"ExplicitVolumeChange"]) {
-        float volume = [ userInfo[@"AVSystemController_AudioVolumeNotificationParameter"] floatValue];
+- (void)volumeChanged:(NSNotification *)notification {
+    //iOS 15 以前的 Key
+    NSString *reasonKey = @"AudioVolumeChangeReason";
+    NSString *volumeKey = @"AudioVolume";
+    //iOS 15 以后的 Key
+    if (@available(iOS 15, *)) {
+        reasonKey = @"Reason";
+        volumeKey = @"Volume";
+    }
+    
+    if (![[[notification userInfo] objectForKey:reasonKey] isEqualToString:@"ExplicitVolumeChange"]) {
+        return;
+    }
+    float volume = [[[notification userInfo] objectForKey:volumeKey] floatValue];
+    dispatch_async(dispatch_get_main_queue(), ^{
         if (self.player.isFullScreen) {
             [self.volumeBrightnessView updateProgress:volume withVolumeBrightnessType:ZFVolumeBrightnessTypeVolume];
         } else {
             [self.volumeBrightnessView addSystemVolumeView];
         }
-    }
+    });
 }
 
 #pragma mark - Public Method
